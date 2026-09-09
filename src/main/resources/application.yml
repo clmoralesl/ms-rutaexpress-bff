@@ -10,7 +10,11 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: https://login.microsoftonline.com/${AZURE_TENANT_ID:default-tenant-id}/v2.0
+          jwk-set-uri: https://login.microsoftonline.com/common/discovery/keys
+
+logging:
+  level:
+    org.springframework.security: DEBUG
 
 management:
   endpoints:
