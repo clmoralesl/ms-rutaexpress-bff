@@ -1,0 +1,15 @@
+# Target folder & build output
+target/
+*.class
+
+# Environment variables (Sensitive)
+.env
+
+# IDE / Editor settings
+.idea/
+.vscode/
+*.iml
+
+# OS files
+.DS_Store
+Thumbs.db
