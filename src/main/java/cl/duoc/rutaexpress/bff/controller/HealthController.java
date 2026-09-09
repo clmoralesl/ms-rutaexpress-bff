@@ -8,11 +8,11 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/public")
+@RequestMapping("/api/publico")
 public class HealthController {
 
-    @GetMapping("/health")
-    public ResponseEntity<Map<String, String>> health() {
-        return ResponseEntity.ok(Map.of("status", "UP", "message", "ms-rutaexpress-bff is running"));
+    @GetMapping("/estado")
+    public ResponseEntity<Map<String, String>> estado() {
+        return ResponseEntity.ok(Map.of("estado", "ACTIVO", "mensaje", "ms-rutaexpress-bff en ejecucion"));
     }
 }

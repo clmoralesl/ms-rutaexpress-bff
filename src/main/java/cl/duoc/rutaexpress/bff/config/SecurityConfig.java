@@ -40,13 +40,13 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(authz -> authz
-                // Public endpoints
-                .requestMatchers("/api/public/**", "/actuator/health/**").permitAll()
-                // Role-restricted endpoints (RBAC)
-                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                // Endpoints públicos en español
+                .requestMatchers("/api/publico/**", "/actuator/health/**").permitAll()
+                // Reglas de acceso por roles (RBAC) en español
+                .requestMatchers("/api/administrador/**").hasRole("ADMIN")
                 .requestMatchers("/api/despachador/**").hasAnyRole("ADMIN", "DESPACHADOR")
                 .requestMatchers("/api/cliente/**").hasAnyRole("ADMIN", "CLIENTE")
-                // All other endpoints require generic authentication
+                // Todo lo demás requiere autenticación
                 .anyRequest().authenticated()
             )
             .oauth2ResourceServer(oauth2 -> oauth2
