@@ -14,11 +14,11 @@ import java.util.stream.Collectors;
 @RequestMapping("/api")
 public class RoleTestController {
 
-    @GetMapping("/admin/dashboard")
+    @GetMapping("/administrador/dashboard")
     public ResponseEntity<Map<String, Object>> adminDashboard(Authentication authentication) {
         return ResponseEntity.ok(Map.of(
-            "message", "Acceso concedido al Dashboard de Administración",
-            "user", authentication.getName(),
+            "mensaje", "Acceso concedido al Dashboard de Administración",
+            "usuario", authentication.getName(),
             "roles", authentication.getAuthorities().stream()
                         .map(GrantedAuthority::getAuthority)
                         .collect(Collectors.toList())
@@ -28,8 +28,8 @@ public class RoleTestController {
     @GetMapping("/despachador/pedidos")
     public ResponseEntity<Map<String, Object>> despachadorPedidos(Authentication authentication) {
         return ResponseEntity.ok(Map.of(
-            "message", "Acceso concedido al panel de Despachador",
-            "user", authentication.getName(),
+            "mensaje", "Acceso concedido al panel de Despachador",
+            "usuario", authentication.getName(),
             "roles", authentication.getAuthorities().stream()
                         .map(GrantedAuthority::getAuthority)
                         .collect(Collectors.toList())
@@ -39,8 +39,8 @@ public class RoleTestController {
     @GetMapping("/cliente/mis-envios")
     public ResponseEntity<Map<String, Object>> clienteEnvios(Authentication authentication) {
         return ResponseEntity.ok(Map.of(
-            "message", "Acceso concedido al panel de Cliente",
-            "user", authentication.getName(),
+            "mensaje", "Acceso concedido al panel de Cliente",
+            "usuario", authentication.getName(),
             "roles", authentication.getAuthorities().stream()
                         .map(GrantedAuthority::getAuthority)
                         .collect(Collectors.toList())
