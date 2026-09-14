@@ -24,3 +24,8 @@ management:
   endpoint:
     health:
       show-details: always
+rutaexpress:
+  envios:
+    url: http://localhost:8081
+    connect-timeout: 3000
+    read-timeout: 5000
