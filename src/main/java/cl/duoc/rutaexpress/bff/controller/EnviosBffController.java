@@ -4,15 +4,22 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
+
+import java.net.URI;
 
 @RestController
 @RequestMapping("/api/bff/envios")
 public class EnviosBffController {
+
+    private static final String RUTA_BASE_BFF = "/api/bff/envios";
 
     private final RestTemplate restTemplate;
     private final String enviosUrl;
@@ -24,25 +31,29 @@ public class EnviosBffController {
         this.enviosUrl = enviosUrl;
     }
 
-    @RequestMapping(value = {"", "/**"})
+    @RequestMapping(
+            value = {"", "/**"},
+            method = {
+                    RequestMethod.GET,
+                    RequestMethod.POST,
+                    RequestMethod.PUT
+            }
+    )
     public ResponseEntity<byte[]> enrutar(
             HttpServletRequest request,
             JwtAuthenticationToken authentication,
-            @org.springframework.web.bind.annotation.RequestBody(required = false)
-            byte[] body) {
+            @RequestBody(required = false) byte[] body) {
 
         String rutaOriginal = request.getRequestURI();
-        String rutaBaseBff = "/api/bff/envios";
+        String rutaRestante = rutaOriginal.substring(RUTA_BASE_BFF.length());
 
-        String rutaRestante =
-                rutaOriginal.substring(rutaBaseBff.length());
-
-        String urlDestino =
-                enviosUrl + "/api/envios" + rutaRestante;
-
-        if (request.getQueryString() != null) {
-            urlDestino += "?" + request.getQueryString();
+        if (!rutaPermitida(rutaRestante)) {
+            return ResponseEntity
+                    .badRequest()
+                    .body("Ruta de envíos no válida".getBytes());
         }
+
+        URI urlDestino = construirUrlDestino(request, rutaRestante);
 
         HttpHeaders headers = new HttpHeaders();
 
@@ -82,10 +93,46 @@ public class EnviosBffController {
 
             return ResponseEntity
                     .status(HttpStatus.SERVICE_UNAVAILABLE)
-                    .body(
-                            "Servicio de envíos no disponible"
-                                    .getBytes()
-                    );
+                    .body("Servicio de envíos no disponible".getBytes());
+        }
+    }
+
+    private boolean rutaPermitida(String ruta) {
+        return ruta.isEmpty()
+                || ruta.equals("/")
+                || ruta.matches("/\\d+")
+                || ruta.matches("/\\d+/estado");
+    }
+
+    private URI construirUrlDestino(
+            HttpServletRequest request,
+            String rutaRestante) {
+
+        UriComponentsBuilder builder =
+                UriComponentsBuilder
+                        .fromUriString(enviosUrl)
+                        .path("/api/envios")
+                        .path(rutaRestante);
+
+        agregarParametroSiExiste(builder, request, "estado");
+        agregarParametroSiExiste(builder, request, "fechaDesde");
+        agregarParametroSiExiste(builder, request, "fechaHasta");
+
+        return builder
+                .build()
+                .encode()
+                .toUri();
+    }
+
+    private void agregarParametroSiExiste(
+            UriComponentsBuilder builder,
+            HttpServletRequest request,
+            String nombre) {
+
+        String valor = request.getParameter(nombre);
+
+        if (valor != null && !valor.isBlank()) {
+            builder.queryParam(nombre, valor);
         }
     }
 }
