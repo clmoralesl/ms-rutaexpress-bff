@@ -10,7 +10,7 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          jwk-set-uri: https://login.microsoftonline.com/common/discovery/keys
+          jwk-set-uri: ${JWK_SET_URI:https://login.microsoftonline.com/common/discovery/keys}
 
 logging:
   level:
@@ -24,8 +24,21 @@ management:
   endpoint:
     health:
       show-details: always
+
 rutaexpress:
   envios:
-    url: http://ms-rutaexpress-envios:8081
-    connect-timeout: 3000
-    read-timeout: 5000
+    url: ${RUTAEXPRESS_ENVIOS_URL:http://localhost:8081}
+    connect-timeout: ${RUTAEXPRESS_ENVIOS_CONNECT_TIMEOUT:3000}
+    read-timeout: ${RUTAEXPRESS_ENVIOS_READ_TIMEOUT:5000}
+  catalogo:
+    url: ${RUTAEXPRESS_CATALOGO_URL:http://localhost:8082}
+    connect-timeout: ${RUTAEXPRESS_CATALOGO_CONNECT_TIMEOUT:3000}
+    read-timeout: ${RUTAEXPRESS_CATALOGO_READ_TIMEOUT:5000}
+  auditoria:
+    url: ${RUTAEXPRESS_AUDITORIA_URL:http://localhost:8084}
+    connect-timeout: ${RUTAEXPRESS_AUDITORIA_CONNECT_TIMEOUT:3000}
+    read-timeout: ${RUTAEXPRESS_AUDITORIA_READ_TIMEOUT:5000}
+  reportes:
+    url: ${RUTAEXPRESS_REPORTES_URL:http://localhost:8086}
+    connect-timeout: ${RUTAEXPRESS_REPORTES_CONNECT_TIMEOUT:3000}
+    read-timeout: ${RUTAEXPRESS_REPORTES_READ_TIMEOUT:5000}

@@ -15,4 +15,13 @@ public class HealthController {
     public ResponseEntity<Map<String, String>> estado() {
         return ResponseEntity.ok(Map.of("estado", "ACTIVO", "mensaje", "ms-rutaexpress-bff en ejecucion"));
     }
+
+    @GetMapping("/salud")
+    public ResponseEntity<Map<String, String>> salud() {
+        return ResponseEntity.ok(Map.of(
+                "estado", "UP",
+                "servicio", "ms-rutaexpress-bff",
+                "mensaje", "Microservicio BFF operativo"
+        ));
+    }
 }

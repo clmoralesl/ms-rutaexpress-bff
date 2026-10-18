@@ -1,5 +1,6 @@
 package cl.duoc.rutaexpress.bff.controller;
 
+import cl.duoc.rutaexpress.bff.dto.ErrorRespuestaBff;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
@@ -39,7 +40,7 @@ public class EnviosBffController {
                     RequestMethod.PUT
             }
     )
-    public ResponseEntity<byte[]> enrutar(
+    public ResponseEntity<?> enrutar(
             HttpServletRequest request,
             JwtAuthenticationToken authentication,
             @RequestBody(required = false) byte[] body) {
@@ -91,9 +92,15 @@ public class EnviosBffController {
 
         } catch (ResourceAccessException ex) {
 
+            ErrorRespuestaBff error = ErrorRespuestaBff.servicioNoDisponible(
+                    "ms-rutaexpress-envios",
+                    request.getRequestURI(),
+                    "Servicio de envios no disponible temporalmente. Reintente mas tarde."
+            );
             return ResponseEntity
                     .status(HttpStatus.SERVICE_UNAVAILABLE)
-                    .body("Servicio de envíos no disponible".getBytes());
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(error);
         }
     }
 
