@@ -42,3 +42,7 @@ rutaexpress:
     url: ${RUTAEXPRESS_REPORTES_URL:http://localhost:8086}
     connect-timeout: ${RUTAEXPRESS_REPORTES_CONNECT_TIMEOUT:3000}
     read-timeout: ${RUTAEXPRESS_REPORTES_READ_TIMEOUT:5000}
+  notificaciones:
+    url: ${RUTAEXPRESS_NOTIFICACIONES_URL:http://localhost:8083}
+    connect-timeout: ${RUTAEXPRESS_NOTIFICACIONES_CONNECT_TIMEOUT:3000}
+    read-timeout: ${RUTAEXPRESS_NOTIFICACIONES_READ_TIMEOUT:5000}
