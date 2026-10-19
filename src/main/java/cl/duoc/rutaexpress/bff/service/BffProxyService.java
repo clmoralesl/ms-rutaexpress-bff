@@ -56,7 +56,12 @@ public class BffProxyService {
             }
         }
 
-        headers.set(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+        String acceptHeader = request.getHeader(HttpHeaders.ACCEPT);
+        if (acceptHeader != null && !acceptHeader.isBlank()) {
+            headers.set(HttpHeaders.ACCEPT, acceptHeader);
+        } else {
+            headers.set(HttpHeaders.ACCEPT, MediaType.ALL_VALUE);
+        }
 
         HttpEntity<byte[]> entidad = new HttpEntity<>(body, headers);
 
@@ -74,6 +79,10 @@ public class BffProxyService {
                 headersRespuesta.setContentType(respuesta.getHeaders().getContentType());
             } else {
                 headersRespuesta.setContentType(MediaType.APPLICATION_JSON);
+            }
+
+            if (respuesta.getHeaders().getContentDisposition() != null) {
+                headersRespuesta.setContentDisposition(respuesta.getHeaders().getContentDisposition());
             }
 
             return ResponseEntity

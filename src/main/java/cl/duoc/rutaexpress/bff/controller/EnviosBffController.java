@@ -108,7 +108,8 @@ public class EnviosBffController {
         return ruta.isEmpty()
                 || ruta.equals("/")
                 || ruta.matches("/\\d+")
-                || ruta.matches("/\\d+/estado");
+                || ruta.matches("/\\d+/estado")
+                || ruta.matches("/\\d+/etiqueta");
     }
 
     private URI construirUrlDestino(
