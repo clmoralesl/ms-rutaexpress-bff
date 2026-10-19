@@ -2,6 +2,10 @@ package cl.duoc.rutaexpress.bff.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import java.util.List;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -37,16 +41,17 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
+            .cors(cors -> {})
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(authz -> authz
-                // Endpoints públicos en español
+                // Endpoints pÃºblicos en espaÃ±ol
                 .requestMatchers("/api/publico/**", "/actuator/health/**").permitAll()
-                // Reglas de acceso por roles (RBAC) en español
+                // Reglas de acceso por roles (RBAC) en espaÃ±ol
                 .requestMatchers("/api/administrador/**").hasRole("ADMIN")
                 .requestMatchers("/api/despachador/**").hasAnyRole("ADMIN", "DESPACHADOR")
                 .requestMatchers("/api/cliente/**").hasAnyRole("ADMIN", "CLIENTE")
-                // Todo lo demás requiere autenticación
+                // Todo lo demÃ¡s requiere autenticaciÃ³n
                 .anyRequest().authenticated()
             )
             .oauth2ResourceServer(oauth2 -> oauth2
@@ -99,5 +104,17 @@ public class SecurityConfig {
         } catch (Exception e) {
             return NimbusJwtDecoder.withJwkSetUri(jwkSetUri).build();
         }
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowedOrigins(java.util.List.of("http://localhost:4200"));
+        config.setAllowedMethods(java.util.List.of("GET", "OPTIONS"));
+        config.setAllowedHeaders(java.util.List.of("*"));
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/api/publico/**", config);
+        return source;
     }
 }
