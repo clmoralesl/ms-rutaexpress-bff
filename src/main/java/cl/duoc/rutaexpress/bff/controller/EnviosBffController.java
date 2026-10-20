@@ -79,15 +79,33 @@ public class EnviosBffController {
                             byte[].class
                     );
 
+            HttpHeaders headersRespuesta = new HttpHeaders();
+            if (respuesta.getHeaders().getContentType() != null) {
+                headersRespuesta.setContentType(respuesta.getHeaders().getContentType());
+            } else {
+                headersRespuesta.setContentType(MediaType.APPLICATION_JSON);
+            }
+            if (respuesta.getHeaders().getContentDisposition() != null) {
+                headersRespuesta.setContentDisposition(respuesta.getHeaders().getContentDisposition());
+            }
+
             return ResponseEntity
                     .status(respuesta.getStatusCode())
-                    .headers(respuesta.getHeaders())
+                    .headers(headersRespuesta)
                     .body(respuesta.getBody());
 
         } catch (HttpStatusCodeException ex) {
 
+            HttpHeaders errorHeaders = new HttpHeaders();
+            if (ex.getResponseHeaders() != null && ex.getResponseHeaders().getContentType() != null) {
+                errorHeaders.setContentType(ex.getResponseHeaders().getContentType());
+            } else {
+                errorHeaders.setContentType(MediaType.APPLICATION_JSON);
+            }
+
             return ResponseEntity
                     .status(ex.getStatusCode())
+                    .headers(errorHeaders)
                     .body(ex.getResponseBodyAsByteArray());
 
         } catch (ResourceAccessException ex) {
