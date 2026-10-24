@@ -127,7 +127,8 @@ public class EnviosBffController {
                 || ruta.equals("/")
                 || ruta.matches("/\\d+")
                 || ruta.matches("/\\d+/estado")
-                || ruta.matches("/\\d+/etiqueta");
+                || ruta.matches("/\\d+/etiqueta")
+                || ruta.equals("/geografia/regiones");
     }
 
     private URI construirUrlDestino(
