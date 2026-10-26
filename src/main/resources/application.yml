@@ -26,6 +26,7 @@ management:
       show-details: always
 
 rutaexpress:
+  secreto-interno: ${RUTAEXPRESS_SECRETO_INTERNO:}
   envios:
     url: ${RUTAEXPRESS_ENVIOS_URL:http://localhost:8081}
     connect-timeout: ${RUTAEXPRESS_ENVIOS_CONNECT_TIMEOUT:3000}
