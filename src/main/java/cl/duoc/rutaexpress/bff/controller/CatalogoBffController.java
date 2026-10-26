@@ -3,6 +3,7 @@ package cl.duoc.rutaexpress.bff.controller;
 import cl.duoc.rutaexpress.bff.service.BffProxyService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
@@ -13,13 +14,36 @@ import org.springframework.web.bind.annotation.*;
 public class CatalogoBffController {
 
     private final String catalogoUrl;
+    private final String secretoInterno;
     private final BffProxyService proxyService;
 
     public CatalogoBffController(
             @Value("${rutaexpress.catalogo.url}") String catalogoUrl,
+            @Value("${rutaexpress.secreto-interno:}") String secretoInterno,
             BffProxyService proxyService) {
         this.catalogoUrl = catalogoUrl;
+        this.secretoInterno = secretoInterno;
         this.proxyService = proxyService;
+    }
+
+    private ResponseEntity<?> reenviarConAutenticacionInterna(
+            String rutaDestino,
+            HttpServletRequest request,
+            JwtAuthenticationToken authentication,
+            byte[] body) {
+        HttpHeaders headers = new HttpHeaders();
+        if (secretoInterno != null && !secretoInterno.isBlank()) {
+            headers.set("X-Servicio-Interno", secretoInterno);
+        }
+        return proxyService.reenviar(
+                catalogoUrl,
+                rutaDestino,
+                request,
+                authentication,
+                body,
+                "ms-rutaexpress-catalogo",
+                headers
+        );
     }
 
     @GetMapping("/servicios")
@@ -27,13 +51,11 @@ public class CatalogoBffController {
     public ResponseEntity<?> listarServicios(
             HttpServletRequest request,
             JwtAuthenticationToken authentication) {
-        return proxyService.reenviar(
-                catalogoUrl,
+        return reenviarConAutenticacionInterna(
                 "/api/catalogo/servicios",
                 request,
                 authentication,
-                null,
-                "ms-rutaexpress-catalogo"
+                null
         );
     }
 
@@ -43,13 +65,11 @@ public class CatalogoBffController {
             @PathVariable Long id,
             HttpServletRequest request,
             JwtAuthenticationToken authentication) {
-        return proxyService.reenviar(
-                catalogoUrl,
+        return reenviarConAutenticacionInterna(
                 "/api/catalogo/servicios/" + id,
                 request,
                 authentication,
-                null,
-                "ms-rutaexpress-catalogo"
+                null
         );
     }
 
@@ -59,13 +79,11 @@ public class CatalogoBffController {
             @RequestBody(required = false) byte[] body,
             HttpServletRequest request,
             JwtAuthenticationToken authentication) {
-        return proxyService.reenviar(
-                catalogoUrl,
+        return reenviarConAutenticacionInterna(
                 "/api/catalogo/servicios",
                 request,
                 authentication,
-                body,
-                "ms-rutaexpress-catalogo"
+                body
         );
     }
 
@@ -76,13 +94,11 @@ public class CatalogoBffController {
             @RequestBody(required = false) byte[] body,
             HttpServletRequest request,
             JwtAuthenticationToken authentication) {
-        return proxyService.reenviar(
-                catalogoUrl,
+        return reenviarConAutenticacionInterna(
                 "/api/catalogo/servicios/" + id,
                 request,
                 authentication,
-                body,
-                "ms-rutaexpress-catalogo"
+                body
         );
     }
 
@@ -93,13 +109,11 @@ public class CatalogoBffController {
             @RequestBody(required = false) byte[] body,
             HttpServletRequest request,
             JwtAuthenticationToken authentication) {
-        return proxyService.reenviar(
-                catalogoUrl,
+        return reenviarConAutenticacionInterna(
                 "/api/catalogo/servicios/" + id + "/descontar-capacidad",
                 request,
                 authentication,
-                body,
-                "ms-rutaexpress-catalogo"
+                body
         );
     }
 
@@ -110,13 +124,11 @@ public class CatalogoBffController {
             @RequestBody(required = false) byte[] body,
             HttpServletRequest request,
             JwtAuthenticationToken authentication) {
-        return proxyService.reenviar(
-                catalogoUrl,
+        return reenviarConAutenticacionInterna(
                 "/api/catalogo/servicios/" + id + "/restablecer-capacidad",
                 request,
                 authentication,
-                body,
-                "ms-rutaexpress-catalogo"
+                body
         );
     }
 }
