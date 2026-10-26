@@ -32,6 +32,17 @@ public class BffProxyService {
             JwtAuthenticationToken authentication,
             byte[] body,
             String nombreServicio) {
+        return reenviar(urlBaseServicio, rutaDestino, request, authentication, body, nombreServicio, null);
+    }
+
+    public ResponseEntity<Object> reenviar(
+            String urlBaseServicio,
+            String rutaDestino,
+            HttpServletRequest request,
+            JwtAuthenticationToken authentication,
+            byte[] body,
+            String nombreServicio,
+            HttpHeaders cabecerasAdicionales) {
 
         UriComponentsBuilder builder = UriComponentsBuilder
                 .fromUriString(urlBaseServicio)
@@ -46,6 +57,10 @@ public class BffProxyService {
         HttpHeaders headers = new HttpHeaders();
         if (authentication != null && authentication.getToken() != null) {
             headers.setBearerAuth(authentication.getToken().getTokenValue());
+        }
+
+        if (cabecerasAdicionales != null) {
+            headers.addAll(cabecerasAdicionales);
         }
 
         if (request.getContentType() != null) {

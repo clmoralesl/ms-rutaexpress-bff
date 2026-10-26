@@ -15,9 +15,11 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -25,6 +27,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(CatalogoBffController.class)
 @Import({SecurityConfig.class, JwtRoleConverter.class})
+@TestPropertySource(properties = "rutaexpress.secreto-interno=test-secreto-interno-bff-seguro-32caracteres")
 class CatalogoBffControllerTest {
 
     @Autowired
@@ -37,16 +40,26 @@ class CatalogoBffControllerTest {
     private JwtDecoder jwtDecoder;
 
     @Test
-    @DisplayName("GET /api/bff/catalogo/servicios con usuario autenticado retorna 200 OK")
+    @DisplayName("GET /api/bff/catalogo/servicios con usuario autenticado retorna 200 OK y envia X-Servicio-Interno")
     void listarServiciosAutenticado() throws Exception {
         byte[] cuerpo = "[{\"id\":1,\"nombre\":\"Express\"}]".getBytes();
-        when(proxyService.reenviar(any(), any(), any(), any(), any(), eq("ms-rutaexpress-catalogo")))
+        when(proxyService.reenviar(any(), any(), any(), any(), any(), eq("ms-rutaexpress-catalogo"), any()))
                 .thenReturn(ResponseEntity.ok(cuerpo));
 
         mockMvc.perform(get("/api/bff/catalogo/servicios")
                         .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_CLIENTE"))))
                 .andExpect(status().isOk())
                 .andExpect(content().bytes(cuerpo));
+
+        verify(proxyService).reenviar(
+                any(),
+                eq("/api/catalogo/servicios"),
+                any(),
+                any(),
+                isNull(),
+                eq("ms-rutaexpress-catalogo"),
+                argThat(headers -> headers != null && "test-secreto-interno-bff-seguro-32caracteres".equals(headers.getFirst("X-Servicio-Interno")))
+        );
     }
 
     @Test
@@ -60,7 +73,7 @@ class CatalogoBffControllerTest {
     @DisplayName("POST /api/bff/catalogo/servicios con ROLE_ADMIN retorna 200 OK")
     void crearServicioConRolAdmin() throws Exception {
         byte[] cuerpo = "{\"id\":1,\"nombre\":\"Nuevo\"}".getBytes();
-        when(proxyService.reenviar(any(), any(), any(), any(), any(), eq("ms-rutaexpress-catalogo")))
+        when(proxyService.reenviar(any(), any(), any(), any(), any(), eq("ms-rutaexpress-catalogo"), any()))
                 .thenReturn(ResponseEntity.ok(cuerpo));
 
         mockMvc.perform(post("/api/bff/catalogo/servicios")
@@ -84,7 +97,7 @@ class CatalogoBffControllerTest {
     @DisplayName("PATCH /api/bff/catalogo/servicios/1/descontar-capacidad con ROLE_OPERADOR retorna 200 OK")
     void descontarCapacidadOperador() throws Exception {
         byte[] cuerpo = "{\"id\":1,\"capacidadDisponible\":9}".getBytes();
-        when(proxyService.reenviar(any(), any(), any(), any(), any(), eq("ms-rutaexpress-catalogo")))
+        when(proxyService.reenviar(any(), any(), any(), any(), any(), eq("ms-rutaexpress-catalogo"), any()))
                 .thenReturn(ResponseEntity.ok(cuerpo));
 
         mockMvc.perform(patch("/api/bff/catalogo/servicios/1/descontar-capacidad")
@@ -108,7 +121,7 @@ class CatalogoBffControllerTest {
                 "/api/bff/catalogo/servicios",
                 "El servicio no esta disponible"
         );
-        when(proxyService.reenviar(any(), any(), any(), any(), any(), eq("ms-rutaexpress-catalogo")))
+        when(proxyService.reenviar(any(), any(), any(), any(), any(), eq("ms-rutaexpress-catalogo"), any()))
                 .thenReturn(ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(error));
 
         mockMvc.perform(get("/api/bff/catalogo/servicios")
