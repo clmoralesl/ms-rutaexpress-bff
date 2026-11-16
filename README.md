@@ -64,8 +64,21 @@ Microservicio desarrollado en Spring Boot 3.3.0 y Java 17 que opera como puerta 
 | Variable | Descripcion | Valor por Defecto |
 | :--- | :--- | :--- |
 | `SERVER_PORT` | Puerto HTTP del servicio | `8080` |
-| `JWK_SET_URI` | URL del endpoint de certificados JWKS de Azure AD | Microsoft common discovery |
+| `AZURE_TENANT_ID` | GUID del tenant de Microsoft Entra ID. Obligatoria: el BFF no arranca sin ella. Define el emisor (`https://sts.windows.net/<tenant>/`) y la URL de claves del tenant | Sin valor |
+| `AZURE_API_AUDIENCIAS` | Audiencias (claim `aud`) aceptadas, separadas por comas. Obligatoria: el BFF no arranca sin ella. Debe coincidir con `api_audiencias_jwt` del API Gateway | Sin valor |
 | `RUTAEXPRESS_ENVIOS_URL` | URL base de ms-rutaexpress-envios | `http://localhost:8081` |
 | `RUTAEXPRESS_CATALOGO_URL` | URL base de ms-rutaexpress-catalogo | `http://localhost:8082` |
 | `RUTAEXPRESS_AUDITORIA_URL` | URL base de ms-rutaexpress-auditoria | `http://localhost:8084` |
 | `RUTAEXPRESS_REPORTES_URL` | URL base de ms-rutaexpress-reportes | `http://localhost:8086` |
+
+### Validacion del JWT y TLS (issue #95)
+
+El BFF valida firma, vigencia, emisor y audiencia del token. Descarga las claves de firma desde `https://login.microsoftonline.com/<tenant>/discovery/v2.0/keys` verificando el certificado TLS con el almacen de confianza de la JVM; no existe ninguna opcion para desactivar esa verificacion.
+
+Si un antivirus o proxy intercepta HTTPS en el equipo local, importe su certificado raiz en un almacen de confianza propio (fuera del repositorio) y entreguelo a la JVM con:
+
+```
+JAVA_TOOL_OPTIONS=-Djavax.net.ssl.trustStore=<ruta> -Djavax.net.ssl.trustStorePassword=<clave>
+```
+
+No se versiona ningun almacen de claves ni certificado en el repositorio.
