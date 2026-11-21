@@ -26,22 +26,24 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(authz -> authz
-                // Endpoints públicos en español
-                .requestMatchers("/api/publico/**", "/actuator/health/**").permitAll()
-                // Reglas de acceso por roles (RBAC) en español
+                // Rutas publicas: solo GET (issue #89). Cualquier otro metodo se rechaza.
+                .requestMatchers(HttpMethod.GET, "/api/publico/**").permitAll()
+                .requestMatchers("/api/publico/**").denyAll()
+                .requestMatchers("/actuator/health/**").permitAll()
                 .requestMatchers("/api/administrador/**").hasRole("ADMIN")
                 .requestMatchers("/api/despachador/**").hasAnyRole("ADMIN", "DESPACHADOR")
                 .requestMatchers("/api/cliente/**").hasAnyRole("ADMIN", "CLIENTE")
-
-                // Reglas RBAC para microservicio de envios (Issue #69)
+                // Envios (issue #69); la aceptacion (issue #88) va antes del denyAll
+                .requestMatchers(HttpMethod.POST, "/api/bff/envios/*/aceptacion").hasAnyRole("ADMIN", "DESPACHADOR")
                 .requestMatchers(HttpMethod.PUT,  "/api/bff/envios/*/estado").hasAnyRole("ADMIN", "DESPACHADOR")
                 .requestMatchers(HttpMethod.POST, "/api/bff/envios/*/etiqueta").hasAnyRole("ADMIN", "DESPACHADOR", "OPERADOR")
                 .requestMatchers(HttpMethod.GET,  "/api/bff/envios", "/api/bff/envios/", "/api/bff/envios/*",
                                                    "/api/bff/envios/geografia/regiones").hasAnyRole("ADMIN", "DESPACHADOR", "CLIENTE", "OPERADOR")
                 .requestMatchers(HttpMethod.POST, "/api/bff/envios", "/api/bff/envios/").hasAnyRole("ADMIN", "DESPACHADOR", "CLIENTE")
                 .requestMatchers("/api/bff/envios/**").denyAll()
-
-                // Todo lo demás requiere autenticación
+                // Administracion de sucursales y factores por zona (issue #89)
+                .requestMatchers("/api/bff/catalogo/sucursales", "/api/bff/catalogo/sucursales/**",
+                                 "/api/bff/catalogo/tarifas-zonas", "/api/bff/catalogo/tarifas-zonas/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
             )
             // El JwtDecoder (firma, vigencia, emisor y audiencia) lo aporta EntraJwtConfig (issue #95)

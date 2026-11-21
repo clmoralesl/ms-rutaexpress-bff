@@ -18,9 +18,10 @@ import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.List;
+
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -129,5 +130,115 @@ class CatalogoBffControllerTest {
                 .andExpect(status().isServiceUnavailable())
                 .andExpect(jsonPath("$.estado").value(503))
                 .andExpect(jsonPath("$.servicio").value("ms-rutaexpress-catalogo"));
+    }
+
+    @Test
+    @DisplayName("Las siete rutas de administracion de sucursales y factores responden 403 Forbidden para roles no ADMIN (C17)")
+    void administracionSoloAdmin() throws Exception {
+        List<String> rolesNoAdmin = List.of("DESPACHADOR", "OPERADOR", "CLIENTE", "AUDITOR");
+
+        for (String rol : rolesNoAdmin) {
+            SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + rol);
+
+            mockMvc.perform(get("/api/bff/catalogo/sucursales")
+                            .with(jwt().authorities(authority)))
+                    .andExpect(status().isForbidden());
+
+            mockMvc.perform(post("/api/bff/catalogo/sucursales")
+                            .with(jwt().authorities(authority))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"nombre\":\"Sucursal Central\"}"))
+                    .andExpect(status().isForbidden());
+
+            mockMvc.perform(get("/api/bff/catalogo/sucursales/1")
+                            .with(jwt().authorities(authority)))
+                    .andExpect(status().isForbidden());
+
+            mockMvc.perform(put("/api/bff/catalogo/sucursales/1")
+                            .with(jwt().authorities(authority))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"nombre\":\"Sucursal Actualizada\"}"))
+                    .andExpect(status().isForbidden());
+
+            mockMvc.perform(get("/api/bff/catalogo/tarifas-zonas")
+                            .with(jwt().authorities(authority)))
+                    .andExpect(status().isForbidden());
+
+            mockMvc.perform(get("/api/bff/catalogo/tarifas-zonas/REGIONAL")
+                            .with(jwt().authorities(authority)))
+                    .andExpect(status().isForbidden());
+
+            mockMvc.perform(put("/api/bff/catalogo/tarifas-zonas/REGIONAL")
+                            .with(jwt().authorities(authority))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"factor\":1.5}"))
+                    .andExpect(status().isForbidden());
+        }
+
+        verifyNoInteractions(proxyService);
+    }
+
+    @Test
+    @DisplayName("ROLE_ADMIN administra sucursales y factores con X-Servicio-Interno (C18)")
+    void adminAdministraSucursalesYFactores() throws Exception {
+        byte[] respuestaSucursal = "{\"id\":1,\"nombre\":\"Sucursal Central\"}".getBytes();
+        byte[] respuestaZona = "{\"zona\":\"REGIONAL\",\"factor\":1.5}".getBytes();
+
+        when(proxyService.reenviar(any(), eq("/api/catalogo/sucursales"), any(), any(), any(), eq("ms-rutaexpress-catalogo"), any()))
+                .thenReturn(ResponseEntity.ok(respuestaSucursal));
+        when(proxyService.reenviar(any(), eq("/api/catalogo/tarifas-zonas/REGIONAL"), any(), any(), any(), eq("ms-rutaexpress-catalogo"), any()))
+                .thenReturn(ResponseEntity.ok(respuestaZona));
+
+        mockMvc.perform(post("/api/bff/catalogo/sucursales")
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_ADMIN")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"nombre\":\"Sucursal Central\"}"))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(put("/api/bff/catalogo/tarifas-zonas/REGIONAL")
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_ADMIN")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"factor\":1.5}"))
+                .andExpect(status().isOk());
+
+        verify(proxyService).reenviar(
+                any(),
+                eq("/api/catalogo/sucursales"),
+                any(),
+                any(),
+                any(),
+                eq("ms-rutaexpress-catalogo"),
+                argThat(headers -> headers != null && "test-secreto-interno-bff-seguro-32caracteres".equals(headers.getFirst("X-Servicio-Interno")))
+        );
+
+        verify(proxyService).reenviar(
+                any(),
+                eq("/api/catalogo/tarifas-zonas/REGIONAL"),
+                any(),
+                any(),
+                any(),
+                eq("ms-rutaexpress-catalogo"),
+                argThat(headers -> headers != null && "test-secreto-interno-bff-seguro-32caracteres".equals(headers.getFirst("X-Servicio-Interno")))
+        );
+    }
+
+    @Test
+    @DisplayName("Parametro {zona} invalido responde 400 Bad Request sin llamar al catalogo (C19)")
+    void zonaInvalidaResponde400() throws Exception {
+        mockMvc.perform(put("/api/bff/catalogo/tarifas-zonas/regional")
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_ADMIN")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"factor\":1.5}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON));
+
+        mockMvc.perform(put("/api/bff/catalogo/tarifas-zonas/REG-1")
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_ADMIN")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"factor\":1.5}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON));
+
+        verifyNoInteractions(proxyService);
     }
 }
