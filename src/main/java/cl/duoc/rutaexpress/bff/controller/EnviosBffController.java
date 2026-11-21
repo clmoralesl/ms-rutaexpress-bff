@@ -183,12 +183,9 @@ public class EnviosBffController {
     }
 
     private String extraerEmail(Jwt jwt) {
-        String[] claims = {"email", "upn", "unique_name", "preferred_username"};
-        for (String claim : claims) {
-            String valor = jwt.getClaimAsString(claim);
-            if (valor != null && !valor.isBlank()) {
-                return valor.trim();
-            }
+        String upn = jwt.getClaimAsString("upn");
+        if (upn != null && !upn.isBlank() && !upn.contains("#EXT#")) {
+            return upn.trim();
         }
         return null;
     }
@@ -199,6 +196,7 @@ public class EnviosBffController {
                 || ruta.matches("/\\d+")
                 || ruta.matches("/\\d+/estado")
                 || ruta.matches("/\\d+/etiqueta")
+                || ruta.matches("/\\d+/aceptacion")
                 || ruta.equals("/geografia/regiones");
     }
 

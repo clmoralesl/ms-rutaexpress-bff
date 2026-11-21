@@ -1,5 +1,6 @@
 server:
   port: 8080
+  forward-headers-strategy: native
 
 spring:
   config:
@@ -22,6 +23,11 @@ management:
 
 rutaexpress:
   secreto-interno: ${RUTAEXPRESS_SECRETO_INTERNO:}
+  limite-tasa:
+    capacidad: ${RUTAEXPRESS_LIMITE_TASA_CAPACIDAD:25}
+    recarga-por-minuto: ${RUTAEXPRESS_LIMITE_TASA_RECARGA_POR_MINUTO:20}
+    max-clientes: ${RUTAEXPRESS_LIMITE_TASA_MAX_CLIENTES:10000}
+    expiracion-minutos: ${RUTAEXPRESS_LIMITE_TASA_EXPIRACION_MINUTOS:10}
   seguridad:
     jwt:
       tenant-id: ${AZURE_TENANT_ID:}
