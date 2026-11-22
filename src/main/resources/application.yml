@@ -1,20 +1,16 @@
 server:
   port: 8080
+  forward-headers-strategy: native
 
 spring:
   config:
     import: optional:file:.env[.properties]
   application:
     name: ms-rutaexpress-bff
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          jwk-set-uri: ${JWK_SET_URI:https://login.microsoftonline.com/common/discovery/keys}
 
 logging:
   level:
-    org.springframework.security: DEBUG
+    org.springframework.security: INFO
 
 management:
   endpoints:
@@ -27,6 +23,15 @@ management:
 
 rutaexpress:
   secreto-interno: ${RUTAEXPRESS_SECRETO_INTERNO:}
+  limite-tasa:
+    capacidad: ${RUTAEXPRESS_LIMITE_TASA_CAPACIDAD:25}
+    recarga-por-minuto: ${RUTAEXPRESS_LIMITE_TASA_RECARGA_POR_MINUTO:20}
+    max-clientes: ${RUTAEXPRESS_LIMITE_TASA_MAX_CLIENTES:10000}
+    expiracion-minutos: ${RUTAEXPRESS_LIMITE_TASA_EXPIRACION_MINUTOS:10}
+  seguridad:
+    jwt:
+      tenant-id: ${AZURE_TENANT_ID:}
+      audiencias: ${AZURE_API_AUDIENCIAS:}
   envios:
     url: ${RUTAEXPRESS_ENVIOS_URL:http://localhost:8081}
     connect-timeout: ${RUTAEXPRESS_ENVIOS_CONNECT_TIMEOUT:3000}
