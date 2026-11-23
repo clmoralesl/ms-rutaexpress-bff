@@ -10,6 +10,10 @@ public record ErrorRespuestaBff(
         String servicio,
         String ruta
 ) {
+    public static ErrorRespuestaBff solicitudInvalida(String servicio, String ruta, String mensaje) {
+        return new ErrorRespuestaBff(Instant.now(), 400, "Bad Request", mensaje, servicio, ruta);
+    }
+
     public static ErrorRespuestaBff servicioNoDisponible(String servicio, String ruta, String mensaje) {
         return new ErrorRespuestaBff(
                 Instant.now(),
