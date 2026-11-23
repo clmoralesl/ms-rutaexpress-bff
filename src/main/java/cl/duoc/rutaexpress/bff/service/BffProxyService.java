@@ -44,15 +44,21 @@ public class BffProxyService {
             String nombreServicio,
             HttpHeaders cabecerasAdicionales) {
 
-        UriComponentsBuilder builder = UriComponentsBuilder
-                .fromUriString(urlBaseServicio)
-                .path(rutaDestino);
-
-        if (request.getQueryString() != null && !request.getQueryString().isBlank()) {
-            builder.query(request.getQueryString());
+        URI uriDestino;
+        try {
+            uriDestino = construirUriDestino(urlBaseServicio, rutaDestino, request.getQueryString());
+        } catch (IllegalArgumentException ex) {
+            log.warn("URI destino invalida hacia {} desde {}", nombreServicio, request.getRequestURI());
+            ErrorRespuestaBff error = ErrorRespuestaBff.solicitudInvalida(
+                    nombreServicio,
+                    request.getRequestURI(),
+                    "La ruta o los parametros de la consulta contienen caracteres no validos."
+            );
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(error);
         }
-
-        URI uriDestino = builder.build(true).toUri();
 
         HttpHeaders headers = new HttpHeaders();
         if (authentication != null && authentication.getToken() != null) {
@@ -140,5 +146,20 @@ public class BffProxyService {
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(error);
         }
+    }
+
+    static URI construirUriDestino(String urlBaseServicio, String rutaDestino, String queryOriginal) {
+        String base = UriComponentsBuilder.fromUriString(urlBaseServicio)
+                .path(rutaDestino)
+                .build(true)
+                .toUriString();
+        if (queryOriginal == null || queryOriginal.isBlank()) {
+            return URI.create(base);
+        }
+        URI uri = URI.create(base + "?" + queryOriginal);
+        if (uri.getRawFragment() != null) {
+            throw new IllegalArgumentException("La query no puede contener un fragmento");
+        }
+        return uri;
     }
 }
