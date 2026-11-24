@@ -44,6 +44,8 @@ public class SecurityConfig {
                 // Administracion de sucursales y factores por zona (issue #89)
                 .requestMatchers("/api/bff/catalogo/sucursales", "/api/bff/catalogo/sucursales/**",
                                  "/api/bff/catalogo/tarifas-zonas", "/api/bff/catalogo/tarifas-zonas/**").hasRole("ADMIN")
+                // Administracion de RabbitMQ (issue #97)
+                .requestMatchers("/api/bff/mensajeria", "/api/bff/mensajeria/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
             )
             // El JwtDecoder (firma, vigencia, emisor y audiencia) lo aporta EntraJwtConfig (issue #95)
